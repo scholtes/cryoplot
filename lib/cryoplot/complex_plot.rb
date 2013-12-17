@@ -1,3 +1,5 @@
+require 'cmath'
+
 module Cryoplot # :nodoc:
 
 	# Cryoplot::ComplexPlot represents an individual complex-valued plot.
@@ -25,6 +27,12 @@ module Cryoplot # :nodoc:
 				top_margin=0, bottom_margin=0, left_margin=0, right_margin=0,
 				bg_color = ChunkyPNG::Color::PREDEFINED_COLORS[:whitesmoke])
 			super(width+left_margin+right_margin, height+top_margin+bottom_margin, bg_color)
+			@width, @height = width, height
+			@min_r, @max_r = min_r, max_r
+			@min_i, @max_i = min_i, max_i
+			@top_margin, @bottom_margin = top_margin, bottom_margin
+			@left_margin, @right_margin = left_margin, right_margin
+			@bg_color = bg_color
 			@size = 0;
 		end
 
@@ -45,12 +53,23 @@ module Cryoplot # :nodoc:
 			@size += 1
 		end
 
+		#--
 		# Private Methods below
 
-		# TODO: Make this actually do stuff
+		# TODO: Finish other private methods
 		# Like this: http://en.wikipedia.org/wiki/Domain_coloring
 		def plotDCPlot(color)
-			yield Complex(0,0) # This does nothing, stops from throwing exception.  Remove
+			for pixel_x in @left_margin..(@width+@left_margin-1)
+				for pixel_y in @top_margin..(@top_margin+@height-1)
+					z = pixelToComplex(pixel_x, pixel_y)
+					begin
+						fz = yield(z)
+					rescue
+						fz = Complex(0.0, 0.0)
+					end
+					self[pixel_x, pixel_y] = complexToColor(fz)
+				end
+			end 
 		end
 
 		# TODO: Make this actually do stuff
@@ -60,7 +79,44 @@ module Cryoplot # :nodoc:
 			yield Complex(0,0) # This does nothing, stops from throwing exception.  Remove
 		end
 
-		private :plotDCPlot, :plotCCPlot
+		def pixelToComplex(px, py)
+			Complex((px-@left_margin)*(@max_r-@min_r)/@width.to_f+@min_r,
+					(py-@top_margin)*(@min_i-@max_i)/@height.to_f+@max_i)
+		end
+
+		def complexToColor(z)
+			hue = z.angle * 180.0/CMath::PI
+			r = CMath.log(1.0 + z.magnitude)
+			sat = (1.0 + CMath.sin(2*CMath::PI*r))*0.25 + 0.5
+			val = (1.0 + CMath.cos(2*CMath::PI*r))*0.25 + 0.5
+			# HSV to RGB
+			hue = hue % 360.0
+			col = sat * val
+			hp = hue/60.0
+			xcol = col * (1.0 - (hp%2.0 - 1.0).abs)
+			if 0<=hp and hp<1
+				r,g,b = col, xcol, 0.0
+			elsif 1<=hp and hp<2
+				r,g,b = xcol, col, 0.0
+			elsif 2<=hp and hp<3
+				r,g,b = 0.0, col, xcol
+			elsif 3<=hp and hp<4
+				r,g,b = 0.0, xcol, col
+			elsif 4<=hp and hp<5
+				r,g,b = xcol, 0.0, col
+			elsif 5<=hp and hp<=6
+				r,g,b = col, 0.0, xcol
+			else
+				r,g,b = 0.0, 0.0, 0.0
+			end
+			m = val - col
+			r += m
+			g += m
+			b += m
+			return ChunkyPNG::Color.rgb((255*r).to_i, (255*g).to_i, (255*b).to_i)
+		end
+
+		private :plotDCPlot, :plotCCPlot, :pixelToComplex, :complexToColor
 
 	end
 
