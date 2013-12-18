@@ -11,6 +11,16 @@ module Cryoplot # :nodoc:
 		# The number of functions on this plot.  Starts at 0, increments each time plot is called.
 		attr_reader :size
 
+		# The width and height of the graph portion of the plot, in pixels, but not necessarily of the 
+		# entire plot, if margins are non-zero.
+		attr_reader :width, :height
+
+		# The real and imaginary bounds of the graph.
+		attr_reader :min_r, :max_r, :min_i, :max_i
+
+		# Size of margins, in pixels, around the graph.
+		attr_reader :top_margin, :bottom_margin, :left_margin, :right_margin
+
 		# Initializes a new instance of Cryoplot::ComplexPlot
 		# @param width [Integer] The width of the plot area, in pixels (excluding margins)
 		# @param height [Integer] The height of the plot area, in pixels (excluding margins)
