@@ -1,4 +1,10 @@
+DEFUNCT
+=======
+
+This is dumb and you should not use it.  [gnuplot](http://www.gnuplot.info/) exists and is much better... there exist several Ruby wrappers for it if you insist.
+
 Cryoplot
+========
 
 A pure Ruby gem for creating plots of complex-valued functions.
 This is in the pre-gem stage, no functionality
